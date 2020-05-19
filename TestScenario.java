@@ -4,8 +4,6 @@ import java.util.concurrent.ExecutorService;
 
 class TestScenario {
 
-    public static final int DEFAULT_THREADS = 100;
-
     private CountDownLatch startLatch;
     private CountDownLatch counter;
 
@@ -14,8 +12,7 @@ class TestScenario {
         ExecutorService getExecutor(long nThreads);
     }
 
-    TestScenario(String threadsArg, int defaultThreads, Class<?> caller, ExecutorProvider provider) throws InterruptedException {
-        final int nThreads = threadsArg == null ? defaultThreads : Integer.valueOf(threadsArg);
+    TestScenario(int nThreads, Class<?> caller, ExecutorProvider provider) throws InterruptedException {
         startLatch = new CountDownLatch(1);
         counter = new CountDownLatch(nThreads);
         final DecimalFormat f = new DecimalFormat("###,###");
@@ -32,7 +29,7 @@ class TestScenario {
                     counter.countDown();
                 });
             }
-            System.out.println(caller.getSimpleName() + ": running test scenario with " + f.format(counter.getCount()) + " threads");
+            System.out.println(caller.getSimpleName() + ": running test scenario with " + f.format(counter.getCount()) + " tasks");
             time = System.currentTimeMillis();
             startLatch.countDown();
         } finally {
