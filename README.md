@@ -1,60 +1,52 @@
 Basic test of the Project Loom virtual threads, May 2020 
 -----
 
-This compares a trivial task (decrementing a `CountDownLatch`) in many multiple
-threads, using either a Java 11 fixed thread pool or a Project Loom unbounded
-virtual threads executor.
+This simulates processing incoming events with multiple threads, to compare
+performance between a Java 11 _fixed thread pool_ and a Project Loom _unbounded
+virtual thread executor_.
 
-I initially got _much_ lower execution times executing _many_ more tasks with
-the Project Loom Virtual Threads - but running my Java 11 example with the
-Java 15 JVM provided with the Early Access Project Loom I get similar results.
+A first version didn't lead to impressive results as nothing was blocking, which
+is not typical of request processing where we usually have to wait for I/O or events.
 
-It looks like there's been general threading improvements in the Java 15 JVM,
-and I'm not a specialist of that anyway so who am I to comment?
+Thanks to [Ron Pressler](https://twitter.com/pressron/status/1262883349108068354) for
+pointing this out, and this new version where tasks sleep a few milliseconds to simulate
+the Real World Of Waiting For Things shows dramatic differences:
 
-Anwyway, here's what I get on my 2018 Macbook Pro:
+> 4-10 seconds to run the test using Project Loom virtual threads, compared
+> to about 150 seconds with Java 11 threads.
 
-    $ . setjdk 11
-    openjdk version "11.0.2" 2019-01-15
-    OpenJDK Runtime Environment 18.9 (build 11.0.2+9)
-    OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode, sharing)
+I didn't optimize JVM parameters, using the same heap size for both tests. 
 
-    $ rm -rf *.class && javac Java11Threads.java && java -version && java -Xmx256M Java11Threads 100000 7500
-    openjdk version "11.0.2" 2019-01-15
-    OpenJDK Runtime Environment 18.9 (build 11.0.2+9)
-    OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode, sharing)
+For the Java 11 style tests the thread pool size plays a role and I suspect optimizing
+it in relation with JVM parameters would help. However with the Project Loom virtual
+threads you don't have to care about this which is really nice, I suppose just setting
+the right heap size is good enough.
+
+Here's how to run these tests, with typical timings from my 2018 Macbook Pro, using the 
+Project Loom early access Java 15 JVM.
+
+    $ export N=1000000
+    $ export MEM=-Xmx2G
+    $ export P=7500
+
+    $ rm -rf *.class && javac Java11Threads.java && java $MEM Java11Threads $N $P
     Java11Threads: thread pool size=7500
-    Java11Threads: running test scenario with 100.000 tasks
-    Duration: 5.469 msec
+    Java11Threads: running test scenario with 1’000’000 events
+    Remaining count: 999999 993932 986997 977108...13626 8533 3434 
+    Shutting down executor...
+    Duration: 148 seconds
 
-    $ . setjdk 15
-    openjdk version "15-loom" 2020-09-15
-    OpenJDK Runtime Environment (build 15-loom+7-141)
-    OpenJDK 64-Bit Server VM (build 15-loom+7-141, mixed mode, sharing)
+    $ rm -rf *.class && javac LoomVirtualThreads.java && java $MEM LoomVirtualThreads $N
+    LoomVirtualThreads: running test scenario with 1’000’000 events
+    Remaining count: 999998 948711 885636 434131 
+    Shutting down executor...
+    Duration: 5 seconds
 
-    $ rm -rf *.class && javac Java11Threads.java && java -version && java -Xmx256M Java11Threads 100000 7500
-    openjdk version "15-loom" 2020-09-15
-    OpenJDK Runtime Environment (build 15-loom+7-141)
-    OpenJDK 64-Bit Server VM (build 15-loom+7-141, mixed mode, sharing)
-    Java11Threads: thread pool size=7500
-    Java11Threads: running test scenario with 100’000 tasks
-    Duration: 2’581 msec
+## Conclusions
 
-    $ . setjdk 15
-    openjdk version "15-loom" 2020-09-15
-    OpenJDK Runtime Environment (build 15-loom+7-141)
-    OpenJDK 64-Bit Server VM (build 15-loom+7-141, mixed mode, sharing)
-
-    $ rm -rf *.class && javac LoomVirtualThreads.java && java -version && java -Xmx256M LoomVirtualThreads
-    openjdk version "15-loom" 2020-09-15
-    OpenJDK Runtime Environment (build 15-loom+7-141)
-    OpenJDK 64-Bit Server VM (build 15-loom+7-141, mixed mode, sharing)
-    LoomVirtualThreads: running test scenario with 100’000 tasks
-    Duration: 2’056 msec
-
-That's just scratching the surface of Project Loom however - by enabling simple and modern programming
-styles where (virtual) threads are cheap it should be a game changer for JVM programming, and just
-looking at such a trivial example is probably not very relevant.
+This is just scratching the surface of Project Loom: by enabling simple and modern programming
+styles where (virtual) threads and blocking are cheap it should be a game changer for JVM 
+programming.
 
 We might be able to throw away a lot of code if this delivers on the current `Promises`...
 
