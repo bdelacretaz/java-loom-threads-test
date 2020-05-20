@@ -30,9 +30,7 @@ Project Loom early access Java 15 JVM.
     OpenJDK Runtime Environment (build 15-loom+7-141)
     OpenJDK 64-Bit Server VM (build 15-loom+7-141, mixed mode, sharing)
 
-    $ export N=1000000
-    $ export MEM=-Xmx2G
-    $ export P=7500
+    $ export N=1000000 ; export MEM=-Xmx2G ; export P=7500
 
     $ rm -rf *.class && javac Java11Threads.java && java $MEM Java11Threads $N $P
     Java11Threads: thread pool size=7500

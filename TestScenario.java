@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
@@ -34,26 +35,22 @@ class TestScenario {
         final ExecutorService executor = provider.getExecutor(nEvents);
         final Random random = new Random(42);
         try {
-            executor.submit(() -> {
+            executor.submit((Callable<Void>)() -> {
                 while (counter.getCount() > 0) {
                     // Simulate a naive request processing implementation
                     // with one thread per incoming event.
                     // Naive is cool - we shouldn't have to worry about the rest,
                     // and the very nice thing is that the same code runs
                     // with "plain" as well as virtual Threads
-                    try {
-                        eventsQueue.take();
-                    } catch (InterruptedException ignored) {
-                    }
-                    executor.submit(() -> {
-                        try {
-                            Thread.sleep(50 + random.nextInt(250));
-                        } catch (InterruptedException ignored) {
-                        }
+                    eventsQueue.take();
+                    executor.submit((Callable<Void>)() -> {
+                        Thread.sleep(50 + random.nextInt(250));
                         counter.countDown();
                         maybeReport(counter.getCount());
+                        return null;
                     });
                 }
+                return null;
             });
             System.out.println(caller.getSimpleName() + ": running test scenario with " + f.format(counter.getCount()) + " events");
             System.out.print("Remaining count: ");
