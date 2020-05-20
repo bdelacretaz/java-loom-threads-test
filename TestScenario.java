@@ -27,7 +27,7 @@ class TestScenario {
     }
 
     TestScenario(int nEvents, Class<?> caller, ExecutorProvider provider) throws InterruptedException {
-        final BlockingQueue<Integer> eventsQueue = new ArrayBlockingQueue<Integer>(nEvents);
+        final BlockingQueue<Integer> eventsQueue = new ArrayBlockingQueue<Integer>(Math.min(10000, nEvents / 10));
         final CountDownLatch counter = new CountDownLatch(nEvents);
         final DecimalFormat f = new DecimalFormat("###,###");
 
