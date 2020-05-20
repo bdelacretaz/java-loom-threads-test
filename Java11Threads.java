@@ -12,7 +12,7 @@ public class Java11Threads {
     new TestScenario(
         nEvents,
         Java11Threads.class,
-        (long unused) -> { return Executors.newFixedThreadPool(poolSize); }
+        Executors.newFixedThreadPool(poolSize)
     );
   }
 }

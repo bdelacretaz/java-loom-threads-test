@@ -12,11 +12,6 @@ class TestScenario {
 
     private Instant nextReport = Instant.now();
 
-    @FunctionalInterface
-    static interface ExecutorProvider {
-        ExecutorService getExecutor(long nThreads);
-    }
-
     private synchronized void maybeReport(long count) {
         if (count <= 0)
             return;
@@ -26,13 +21,12 @@ class TestScenario {
         }
     }
 
-    TestScenario(int nEvents, Class<?> caller, ExecutorProvider provider) throws InterruptedException {
+    TestScenario(int nEvents, Class<?> caller, ExecutorService executor) throws InterruptedException {
         final BlockingQueue<Integer> eventsQueue = new ArrayBlockingQueue<Integer>(Math.min(10000, nEvents / 10));
         final CountDownLatch counter = new CountDownLatch(nEvents);
         final DecimalFormat f = new DecimalFormat("###,###");
 
         Instant start = null;
-        final ExecutorService executor = provider.getExecutor(nEvents);
         final Random random = new Random(42);
         try {
             executor.submit((Callable<Void>)() -> {

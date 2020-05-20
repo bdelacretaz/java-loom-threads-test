@@ -9,7 +9,7 @@ public class LoomVirtualThreads {
     new TestScenario(
       nThreads,
       LoomVirtualThreads.class,
-      (long unused) -> { return Executors.newUnboundedVirtualThreadExecutor(); }
+      Executors.newUnboundedVirtualThreadExecutor()
     );
   }
 }
