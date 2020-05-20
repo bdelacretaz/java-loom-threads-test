@@ -25,6 +25,11 @@ the right heap size is good enough.
 Here's how to run these tests, with typical timings from my 2018 Macbook Pro, using the 
 Project Loom early access Java 15 JVM.
 
+    $ java -version
+    openjdk version "15-loom" 2020-09-15
+    OpenJDK Runtime Environment (build 15-loom+7-141)
+    OpenJDK 64-Bit Server VM (build 15-loom+7-141, mixed mode, sharing)
+
     $ export N=1000000
     $ export MEM=-Xmx2G
     $ export P=7500
